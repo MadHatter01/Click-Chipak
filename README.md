@@ -20,9 +20,9 @@
     cd engaging-text-generator
     ```
 
-2. **Install Streamlit and OpenAI**:
+2. Install the required dependencies:
     ```bash
-    pip install streamlit openai
+    pip install -r requirements.txt
     ```
 
 3. **Run the Streamlit app**:
