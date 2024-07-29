@@ -1,10 +1,7 @@
 import streamlit as st
 from openai import OpenAI
 
-
-from openai import OpenAI
-
-client = OpenAI()
+import openai
 
 st.set_page_config(page_title="ClickChipak", page_icon=":pencil:")
 
@@ -60,7 +57,7 @@ st.markdown("""
         Let’s face it: <strong>Lorem Ipsum</strong> is so last decade! While it’s the go-to for placeholders, it’s about as exciting as waiting in line at a grocery store.
     </p>
     <p>
-        That’s why <strong>ClikChipak</strong> is here to serve up random, interesting content. It adds a dash of humor and keeps users engaged, turning my mockups into delightful experiences.
+        That’s why <strong>ClikChipak</strong> is here to serve up random, interesting content. It adds a dash of humor and keeps users engaged, turning mockups into delightful experiences.
     </p>
     <p>
         <strong>Who wouldn’t want a bit of fun in their designs?</strong>
@@ -71,6 +68,15 @@ st.sidebar.header("Input")
 
 api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
+if "api_key" not in st.session_state:
+    if api_key:
+        st.session_state.api_key = api_key
+    else:
+        st.warning("Enter your open api key")
+
+
+client = OpenAI(api_key=api_key)
+
 website_type = st.sidebar.text_input("Type of Website", "clothing" )
 
 num_paragraphs = st.sidebar.slider("Number of Paragraphs", 1, 10, 3)
@@ -79,29 +85,36 @@ num_words = st.sidebar.slider("Number of words per paragraph", 50,500,100)
 tone = st.sidebar.selectbox("Tone", ["Formal", "Neutral", "Informal", "Exciting", "Educational", "Persuasive", "Humorous", "Professional"])
 
 
-generate_button = st.sidebar.button("Generate Text")
+generate_button = st.sidebar.button("Generate Text", disabled ="api_key" not in st.session_state)
 
 generated_text = st.empty()
 
 def generate_text( num_paragraphs, num_words, tone):
     
     prompt = f"Generate {num_paragraphs} paragraphs of {num_words} words each in a {tone} tone for a {website_type} default copy"
-
-    response = client.chat.completions.create(
-    model = 'gpt-3.5-turbo',
-    max_tokens= num_paragraphs*num_words,
-    temperature=0.6,
-    messages = [
-            {"role": "system", "content": "You are an experienced copywriter specializing in creating engaging product copy and taglines. You are asked to create default text for a website"},
-            {"role": "user", "content": prompt}
-        ])
-    return response.choices[0].message.content
+    try:
+        response = client.chat.completions.create(
+        model = 'gpt-3.5-turbo',
+        max_tokens= num_paragraphs*num_words,
+        temperature=0.6,
+        messages = [
+                {"role": "system", "content": "You are an experienced copywriter specializing in creating engaging product copy and taglines. You are asked to create default text for a website"},
+                {"role": "user", "content": prompt}
+            ])
+        return response.choices[0].message.content
+    except openai.AuthenticationError:
+        st.error("Invalid OpenAI API key. Please enter a valid key.")
+    except openai.RateLimitError:
+        st.error("Rate limit exceeded. Please wait and try again later.")
+    except openai.OpenAIError as e:
+        st.error(f"An error occured: {e}")
 
 
 if generate_button:
-    
-    text = generate_text(num_paragraphs, num_words, tone)
-    paragraphs = text.split('\n')
-    formatted_text = "".join(f'<p class="generated-text">{paragraph}</p>' for paragraph in paragraphs)
-    st.subheader("Generated Text")
-    st.markdown(formatted_text, unsafe_allow_html=True)
+    if "api_key" in st.session_state:
+        text = generate_text(num_paragraphs, num_words, tone)
+        if text:
+            paragraphs = text.split('\n')
+            formatted_text = "".join(f'<p class="generated-text">{paragraph}</p>' for paragraph in paragraphs)
+            st.subheader("Generated Text")
+            st.markdown(formatted_text, unsafe_allow_html=True)
