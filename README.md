@@ -16,8 +16,8 @@
 
 1. **Clone the repository**:
     ```bash
-    git clone https://github.com/yourusername/engaging-text-generator.git
-    cd engaging-text-generator
+    git clone https://github.com/MadHatter01/Click-Chipak.git
+    cd click-chipak
     ```
 
 2. Install the required dependencies:
